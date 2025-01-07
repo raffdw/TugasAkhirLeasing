@@ -1,23 +1,27 @@
-PROGRAM LeasingMotor
+BEGIN PROGRAM TugasAkhir
 
 // Global Variables
 DECLARE ArrayList noPelanggan, namaPelanggan, alamatPelanggan
 DECLARE ArrayList kodeMotor, hargaPokok, angsuran, jumlahDp, totalBunga
-DECLARE isRunning = true
+DECLARE boolean isRunning = true
 
 PROCEDURE main()
+    DISPLAY "TUGAS AKHIR PROGRAM LEASING MOTOR"
+    DISPLAY "RAFFI DWI LAKSONO    24.240.0077"
+    
     WHILE isRunning
         CALL showMenu()
     END WHILE
 END PROCEDURE
 
 PROCEDURE showMenu()
-    DISPLAY "TUGAS AKHIR PROGRAM LEASING MOTOR"
+    DISPLAY "====== MENU ======"
     DISPLAY "1. Lihat Data Pelanggan"
     DISPLAY "2. Tambah Data Pelanggan"
     DISPLAY "3. Edit Data Pelanggan"
     DISPLAY "4. Hapus Data Pelanggan"
     DISPLAY "5. Keluar"
+    
     INPUT selectedMenu
     
     SWITCH selectedMenu
@@ -25,7 +29,9 @@ PROCEDURE showMenu()
         CASE 2: CALL inputPelanggan()
         CASE 3: CALL editPelanggan()
         CASE 4: CALL deletePelanggan()
-        CASE 5: SET isRunning = false
+        CASE 5: 
+            SET isRunning = false
+            DISPLAY "Program dihentikan. Terima kasih!"
         DEFAULT: DISPLAY "Menu tidak valid!"
     END SWITCH
 END PROCEDURE
@@ -36,22 +42,37 @@ PROCEDURE showAllPelanggan()
     SET totalPages = CEILING(noPelanggan.size / recordsPerPage)
     
     WHILE true
+        DISPLAY "LAPORAN LEASING MOTOR JAYA ABADI"
+        DISPLAY "DATA PELANGGAN"
+        DISPLAY "Hal " + page
+        
         IF noPelanggan is EMPTY THEN
             DISPLAY "Data Pelanggan Tidak tersedia!"
             RETURN
         END IF
         
-        DISPLAY header information
+        SET totalBayar = 0
+        DISPLAY table header
         
-        FOR each customer in current page
-            CALCULATE totalHarga = hargaPokok - jumlahDp
-            CALCULATE perBulan = totalHarga / angsuran
-            CALCULATE totalAngsuran = perBulan + (perBulan * totalBunga)
-            DISPLAY customer information
+        FOR i = (page-1) * recordsPerPage TO MIN(page * recordsPerPage, noPelanggan.size)
+            CALCULATE totalHarga = hargaPokok[i] - jumlahDp[i]
+            CALCULATE perBulan = totalHarga / angsuran[i]
+            CALCULATE totalAngsuran = perBulan + perBulan * totalBunga[i]
+            ADD totalAngsuran TO totalBayar
+            
+            DISPLAY formatted row with all customer data
         END FOR
         
-        INPUT navigation choice ('n' for next, 'b' for back, 'k' for exit)
-        UPDATE page based on navigation choice
+        DISPLAY totalBayar
+        
+        INPUT navigation choice (n/b/k)
+        IF choice = 'n' AND page < totalPages THEN
+            INCREMENT page
+        ELSE IF choice = 'b' AND page > 1 THEN
+            DECREMENT page
+        ELSE IF choice = 'k' THEN
+            BREAK
+        END IF
     END WHILE
 END PROCEDURE
 
@@ -59,47 +80,52 @@ PROCEDURE inputPelanggan()
     SET berjalan = true
     
     WHILE berjalan
-        DISPLAY available motorcycles and prices
-        INPUT customer number, name, address
-        INPUT motorcycle code
-        GET motorcycle price based on code
-        INPUT down payment (uang muka)
-        INPUT installment period (angsuran)
+        DISPLAY "======== TAMBAH DATA ========"
+        DISPLAY list of available motors and prices
         
-        CALCULATE interest rate based on installment period:
-            IF period <= 12 THEN interest = 0.12
-            IF period <= 24 THEN interest = 0.24
-            IF period > 24 THEN interest = 0.36
+        INPUT nomor, nama, alamat, kode, dp, angsur
+        SET harga = CALL getHarga(kode)
         
-        ADD all information to respective ArrayLists
+        CALCULATE bunga based on angsur:
+            IF angsur ≤ 12 THEN bunga = 0.12
+            IF 12 < angsur ≤ 24 THEN bunga = 0.24
+            IF angsur > 24 THEN bunga = 0.36
         
-        INPUT "Add more data? (y/t)"
-        IF input != 'y' THEN SET berjalan = false
+        ADD all inputs to respective ArrayLists
+        
+        DISPLAY "Data berhasil ditambahkan ke database!"
+        
+        INPUT "Mau nambah data lagi ndak? (y/t)"
+        IF input ≠ "y" THEN
+            SET berjalan = false
+        END IF
     END WHILE
 END PROCEDURE
 
 PROCEDURE editPelanggan()
+    DISPLAY "======== EDIT DATA ========"
     CALL showAllPelanggan()
+    
     INPUT index to edit
     
     IF index is valid THEN
-        INPUT new customer information
-        INPUT new motorcycle code
-        INPUT new down payment
-        INPUT new installment period
-        CALCULATE new interest rate
-        UPDATE all information in respective ArrayLists
+        DISPLAY list of available motors
+        INPUT new customer data
+        UPDATE all ArrayLists at index with new data
+        DISPLAY "Data berhasil diubah!"
     ELSE
         DISPLAY "Data tidak ada dalam database!"
     END IF
 END PROCEDURE
 
 PROCEDURE deletePelanggan()
+    DISPLAY "======== HAPUS DATA ========"
     CALL showAllPelanggan()
+    
     INPUT index to delete
     
     IF index is valid THEN
-        REMOVE data from all ArrayLists at given index
+        REMOVE elements at index from all ArrayLists
         DISPLAY "Data berhasil dihapus!"
     ELSE
         DISPLAY "Data tidak ada dalam database!"
@@ -128,4 +154,4 @@ FUNCTION getMotor(kode)
     END SWITCH
 END FUNCTION
 
-END PROGRAM
+END PROGRAM
